@@ -63,3 +63,30 @@ CREATE TABLE document_chunks (
 );
 CREATE INDEX ON document_chunks USING ivfflat (embedding vector_cosine_ops);
 ```
+
+## Ingestion Pipeline
+
+Documents go through four stages before they're queryable:
+
+```
+File → DocumentProcessor → EntityExtractor → EmbeddingPipeline → PostgreSQL
+```
+
+**1. DocumentProcessor** — format detection and chunking
+- PDF: `pdfplumber` page extraction
+- Markdown: strips `#` headers and fence blocks, keeps prose
+- Plain text: passthrough
+- Chunks at 512 tokens with 50-token overlap so sentences aren't split mid-thought at boundaries
+
+**2. EntityExtractor** — spaCy `en_core_web_sm`
+- Extracts: `PERSON`, `DATE`, `ORG` → stored as `people`, `dates`, `topics`
+- Custom regex patterns for file references (e.g. `REQ-\d+`, `filename.pdf`)
+- Output is a JSONB dict per chunk, enabling SQL filtering by entity type later
+
+**3. EmbeddingPipeline** — `sentence-transformers/all-MiniLM-L6-v2`
+- 384-dimension vectors, stored in the `embedding vector(384)` column
+- Model loads once at startup, runs inference per chunk
+
+**4. TwoTierOrchestrator** — coordinates the above three stages, writes to PostgreSQL, updates processing status in Redis so the frontend can poll live progress
+
+All four stages run async so document upload doesn't block concurrent chat queries.
