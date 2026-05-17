@@ -1,0 +1,39 @@
+# Document Q&A System Requirements
+# Core FastAPI and async support
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+
+# Database drivers and async pool
+asyncpg==0.29.0
+redis[hiredis]==5.0.1
+
+# Document processing
+pypdf==3.17.1
+python-multipart==0.0.6
+pdfplumber==0.10.3
+markdown==3.5.1
+
+# Machine Learning and NLP
+sentence-transformers==2.2.2
+spacy==3.7.2
+transformers==4.35.2
+torch==2.1.1
+
+# Vector database and embeddings
+pgvector==0.2.4
+numpy==1.24.4
+
+# Utilities and logging
+python-dotenv==1.0.0
+pydantic==2.5.0
+aiofiles==23.2.1
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+
+# System monitoring (optional)
+psutil==5.9.6
