@@ -37,3 +37,29 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Supported formats
 
 PDF, Markdown (`.md`), plain text (`.txt`)
+
+## Database Schema
+
+Two-table design:
+
+**`documents`** — one row per uploaded file. Tracks filename, format, word count, processing status, and upload timestamp.
+
+**`document_chunks`** — one row per text chunk. Each chunk stores:
+- `chunk_text` — the raw passage (512-token window, 50-token overlap)
+- `entities` — JSONB: `{ "people": [...], "dates": [...], "topics": [...], "file_refs": [...] }`
+- `embedding` — `vector(384)` for pgvector similarity search
+
+The embedding column is in the schema from the start even though semantic search isn't wired into the query path yet. Paying the schema cost upfront means activating it later is a one-line code change, not a migration against a live table.
+
+```sql
+-- Apply with: psql docqa < database/schema.sql
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE documents ( ... );
+CREATE TABLE document_chunks (
+    ...
+    entities    JSONB,
+    embedding   vector(384)
+);
+CREATE INDEX ON document_chunks USING ivfflat (embedding vector_cosine_ops);
+```
