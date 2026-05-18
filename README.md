@@ -6,11 +6,11 @@ Real-time document processing with progressive search capabilities, adapted from
 
 **Demo 1 — Live system walkthrough**: document upload, chat Q&A, source attribution
 
-[▶ Watch demo 1](James_Zeng_take_home_demo1.mp4)
+[![Demo 1 – Live system walkthrough](https://img.youtube.com/vi/Vurc8MIR4AU/0.jpg)](https://youtu.be/Vurc8MIR4AU)
 
 **Demo 2 — RAGAs evaluation run**: benchmark against ragas-wikiqa, faithfulness / precision / recall scores
 
-[▶ Watch demo 2](James_Zeng_take_home_demo2.mp4)
+[![Demo 2 – RAGAs evaluation run](https://img.youtube.com/vi/IF64C-C1TJs/0.jpg)](https://youtu.be/IF64C-C1TJs)
 
 ---
 
