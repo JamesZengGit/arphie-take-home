@@ -90,3 +90,15 @@ File → DocumentProcessor → EntityExtractor → EmbeddingPipeline → Postgre
 **4. TwoTierOrchestrator** — coordinates the above three stages, writes to PostgreSQL, updates processing status in Redis so the frontend can poll live progress
 
 All four stages run async so document upload doesn't block concurrent chat queries.
+
+## API
+
+Two primary endpoints wired up:
+
+**`POST /api/upload`** — accepts multipart file, runs the ingestion pipeline, returns document ID and chunk count.
+
+**`POST /api/chat`** — takes `{ query, document_ids? }`, runs keyword search against `document_chunks`, returns a grounded response with source attribution.
+
+**`GET /api/documents`** — lists all documents with status and metadata.
+
+Search is currently a full-phrase `ILIKE` match against chunk text — simple and fast to implement, works for exact phrases. Keyword extraction and semantic reranking come next.
