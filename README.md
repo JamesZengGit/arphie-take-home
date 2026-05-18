@@ -102,3 +102,13 @@ Two primary endpoints wired up:
 **`GET /api/documents`** — lists all documents with status and metadata.
 
 Search is currently a full-phrase `ILIKE` match against chunk text — simple and fast to implement, works for exact phrases. Keyword extraction and semantic reranking come next.
+
+## Frontend
+
+Next.js app with three panels:
+
+- **Upload Documents** — drag-and-drop zone (or click to select) for PDF, MD, TXT. Shows upload progress and chunk count on completion.
+- **Document Library** — table of uploaded documents with filename, format, word count, and processing status.
+- **Chat** — ask a natural-language question, get a grounded answer with source document citations.
+
+Stack: Next.js 14 + Tailwind CSS. No external component library — custom `Header`, `Sidebar`, and `Toast` components. API calls go through `src/lib/api.ts` which wraps `fetch` against the FastAPI backend on port 8000.
