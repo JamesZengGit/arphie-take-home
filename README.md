@@ -112,3 +112,11 @@ Next.js app with three panels:
 - **Chat** — ask a natural-language question, get a grounded answer with source document citations.
 
 Stack: Next.js 14 + Tailwind CSS. No external component library — custom `Header`, `Sidebar`, and `Toast` components. API calls go through `src/lib/api.ts` which wraps `fetch` against the FastAPI backend on port 8000.
+
+## Bug Fixes
+
+**Full-phrase search returned zero results** — the initial `/api/chat` implementation used a single `WHERE chunk_text ILIKE '%{full query}%'`, so a question like "What are the main topics?" matched nothing because no chunk contains that exact phrase. The fix was to first remove the try/except fallback that was masking the failure (it silently returned "I couldn't find any documents" for all errors), expose the real behaviour, then fix root cause: extract individual keywords with a stopword filter and run `ILIKE ANY(keywords)` so each keyword matches independently.
+
+**CORS headers missing on error responses** — FastAPI's built-in exception handler doesn't apply CORS middleware to 500 responses. Browser DevTools showed a CORS error masking the real server error. Fixed with a global `@app.exception_handler(Exception)` that applies CORS headers before re-raising.
+
+**Hidden file input in upload zone** — the drag-and-drop zone had a hidden `<input type="file">` and "or click to select" text. Removed — upload is drag-and-drop only, which is the intended interaction.

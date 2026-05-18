@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Upload, File, CheckCircle, AlertCircle } from 'lucide-react';
 import { DocumentStatus } from '@/types';
 
@@ -13,7 +13,6 @@ export function DocumentUpload({ onUpload, uploadStatus }: DocumentUploadProps) 
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -35,20 +34,16 @@ export function DocumentUpload({ onUpload, uploadStatus }: DocumentUploadProps) 
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileUpload(files[0]);
-    }
-  };
 
   const handleFileUpload = async (file: File) => {
+    // Validate file type
     const allowedTypes = ['application/pdf', 'text/plain', 'text/markdown'];
     if (!allowedTypes.includes(file.type) && !file.name.endsWith('.md')) {
       setError('Only PDF, text, and markdown files are supported');
       return;
     }
 
+    // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
       setError('File size must be less than 10MB');
       return;
@@ -143,20 +138,12 @@ export function DocumentUpload({ onUpload, uploadStatus }: DocumentUploadProps) 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
         className={`
-          relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+          relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
           ${dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}
           ${uploading ? 'opacity-50 pointer-events-none' : 'hover:border-blue-400 hover:bg-blue-50'}
         `}
       >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept=".pdf,.txt,.md,.markdown"
-          onChange={handleInputChange}
-        />
         <div className="space-y-4">
           <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
             <Upload className="w-8 h-8 text-gray-400" />
@@ -168,9 +155,6 @@ export function DocumentUpload({ onUpload, uploadStatus }: DocumentUploadProps) 
             </h3>
             <p className="text-gray-600">
               Drag and drop files here
-            </p>
-            <p className="text-sm text-blue-600 mt-1">
-              or click to select
             </p>
           </div>
 
