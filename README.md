@@ -39,34 +39,53 @@ Real-time document processing with progressive search capabilities, adapted from
 
 ## Setup
 
-**Prerequisites**: Docker, Python 3.8+, Node.js 18+
+You need [Docker](https://www.docker.com/get-started), [Python 3.8+](https://www.python.org/downloads/), and [Node.js 18+](https://nodejs.org/) installed.
 
+**Step 1 — Clone the repo**
 ```bash
 git clone https://github.com/JamesZengGit/arphie-take-home.git
 cd arphie-take-home
+```
 
-# Start PostgreSQL + Redis
+**Step 2 — Start the database**
+```bash
 docker-compose up -d postgres redis
+```
+This starts PostgreSQL (with pgvector) and Redis. Wait a few seconds for them to initialize.
 
-# Install Python dependencies
+**Step 3 — Install Python dependencies**
+```bash
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
+```
 
-# Set your OpenAI key (needed for chat responses)
-export OPENAI_API_KEY="your-key-here"
+**Step 4 — Add your OpenAI key**
 
-# Start backend
+Create a file called `.env` in the project root:
+```
+OPENAI_API_KEY=sk-...your-key-here...
+```
+The system uses `gpt-4o-mini` to generate grounded answers. Without a key, uploads and search still work but the chat response will be a template.
+
+**Step 5 — Start the backend**
+```bash
 python server.py
 ```
+The API runs on http://localhost:8000. You should see `Application startup complete.`
 
-In a second terminal:
+**Step 6 — Start the frontend** (open a new terminal tab)
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev
 ```
+The app runs on **http://localhost:3000**.
 
-Open **http://localhost:3000**. Upload documents, then ask questions about them.
+**That's it.** Open http://localhost:3000, drag in some documents, and start asking questions.
 
-**Run the evaluation** (backend must be running):
+---
+
+**Run the evaluation** (optional, backend must be running):
 ```bash
 pip install ragas datasets
 python evaluate_system.py --n 10 --save
