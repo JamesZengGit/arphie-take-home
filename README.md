@@ -2,6 +2,18 @@
 
 Real-time document processing with progressive search capabilities, adapted from align-knowledge architecture for personal document Q&A.
 
+## Demo
+
+**Demo 1 — Live system walkthrough**: document upload, chat Q&A, source attribution
+
+[▶ Watch demo 1](James_Zeng_take_home_demo1.mp4)
+
+**Demo 2 — RAGAs evaluation run**: benchmark against ragas-wikiqa, faithfulness / precision / recall scores
+
+[▶ Watch demo 2](James_Zeng_take_home_demo2.mp4)
+
+---
+
 ## Features
 
 🧠 **Intelligent Search**: Three-tier progressive search (keyword → entity → semantic)
@@ -25,56 +37,41 @@ Real-time document processing with progressive search capabilities, adapted from
 - **Intelligent Response Generation**: Context-aware answers with source attribution
 - **Match Type Indicators**: Shows how results were found (semantic/entity/keyword)
 
-## Setup (5 minutes)
+## Setup
 
-### Prerequisites
+**Prerequisites**: Docker, Python 3.8+, Node.js 18+
+
 ```bash
-# PostgreSQL with pgvector
-sudo apt-get install postgresql postgresql-contrib
-sudo -u postgres psql -c "CREATE EXTENSION vector;"
-
-# Python 3.8+
-python3 --version
-```
-
-### Installation
-```bash
-# Clone and install
-git clone <repo>
+git clone https://github.com/JamesZengGit/arphie-take-home.git
 cd arphie-take-home
-pip install -r requirements.txt
 
-# Download spaCy model
+# Start PostgreSQL + Redis
+docker-compose up -d postgres redis
+
+# Install Python dependencies
+pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 
-# Setup database
-createdb docqa
-psql docqa < schema.sql
+# Set your OpenAI key (needed for chat responses)
+export OPENAI_API_KEY="your-key-here"
 
-# Set database URL
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/docqa"
-```
-
-### Run
-```bash
+# Start backend
 python server.py
-# Open http://localhost:8000
 ```
 
-## Demo
+In a second terminal:
+```bash
+cd frontend && npm install && npm run dev
+```
 
-### Test with sample documents:
-1. **Upload** mixed format documents (PDF, MD, TXT)
-2. **Ask questions**:
-   - "What are the main topics discussed?"
-   - "Who are the key people mentioned?"
-   - "What dates are important?"
-   - "Tell me about [specific topic]"
+Open **http://localhost:3000**. Upload documents, then ask questions about them.
 
-### Expected performance:
-- **20 documents, 50k words**: Processes in ~5-10 minutes
-- **Query speed**: <40ms hybrid search
-- **Accuracy**: 75-85% entity extraction, good semantic matching
+**Run the evaluation** (backend must be running):
+```bash
+pip install ragas datasets
+python evaluate_system.py --n 10 --save
+```
+
 
 ## What We Skipped (Time Constraints)
 

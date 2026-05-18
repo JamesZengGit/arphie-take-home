@@ -6,6 +6,7 @@ Bridges Redis live buffer + SQL persistent storage with atomic document Q&A proc
 import asyncio
 import json
 import logging
+import os
 import time
 import uuid
 from datetime import datetime
@@ -519,51 +520,45 @@ class TwoTierOrchestrator:
             raise RuntimeError("Database not connected")
 
         try:
-            # Generate external document ID (UUID)
             external_document_id = str(uuid.uuid4())
 
-            # Determine content type
-            if filename.lower().endswith('.pdf'):
-                content_type = "application/pdf"
-            elif filename.lower().endswith(('.md', '.markdown')):
-                content_type = "text/markdown"
-            else:
-                content_type = "text/plain"
+            # Save file to disk so DocumentProcessor can read it
+            upload_dir = "/tmp/documents"
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = f"{upload_dir}/{external_document_id}_{filename}"
+            with open(file_path, "wb") as f:
+                f.write(file_content)
 
-            # Mock file path (in real implementation, would save file)
-            file_path = f"/tmp/documents/{external_document_id}_{filename}"
+            # Run the real pipeline: chunk + entity extract + store
+            from backend.pipelines.document_processor import DocumentProcessor
+            processor = DocumentProcessor(self.postgres_url)
+            await processor.init_db_pool()
+            await processor.process_document(file_path, external_document_id=external_document_id)
 
-            # Store document metadata
+            # Fetch actual chunk count written by pipeline
             async with self.db_pool.acquire() as conn:
-                result = await conn.fetchrow("""
-                    INSERT INTO documents (
-                        external_document_id, filename, file_path, content_type,
-                        file_size, processing_status, total_chunks, processed_chunks
-                    ) VALUES ($1, $2, $3, $4, $5, 'processing', 0, 0)
-                    RETURNING document_id
-                """, external_document_id, filename, file_path, content_type, len(file_content))
+                row = await conn.fetchrow("""
+                    SELECT d.document_id, COUNT(dc.chunk_id) as chunk_count
+                    FROM documents d
+                    LEFT JOIN document_chunks dc ON dc.document_id = d.document_id
+                    WHERE d.external_document_id = $1
+                    GROUP BY d.document_id
+                """, external_document_id)
+                chunk_count = row['chunk_count'] if row else 0
 
-                document_id = result['document_id']
-
-            # TODO: Implement actual document processing pipeline
-            # For now, simulate processing
-            await asyncio.sleep(0.1)
-
-            # Update status to completed (mock)
-            async with self.db_pool.acquire() as conn:
                 await conn.execute("""
                     UPDATE documents
                     SET processing_status = 'completed',
-                        total_chunks = 1,
-                        processed_chunks = 1
-                    WHERE external_document_id = $1
-                """, external_document_id)
+                        total_chunks = $1,
+                        processed_chunks = $1
+                    WHERE external_document_id = $2
+                """, chunk_count, external_document_id)
 
             return {
                 "document_id": external_document_id,
                 "filename": filename,
                 "status": "completed",
-                "message": "Document uploaded and processed successfully"
+                "message": f"Document uploaded and processed successfully ({chunk_count} chunks)"
             }
 
         except Exception as e:
