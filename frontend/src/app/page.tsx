@@ -33,6 +33,7 @@ export default function Home() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
+      // Note: This endpoint may not exist yet, will use mock data for now
       const response = await fetch('http://localhost:8000/api/documents');
       if (response.ok) {
         const data = await response.json();
@@ -50,6 +51,7 @@ export default function Home() {
       setLoading(true);
       const response = await api.uploadDocument(file);
 
+      // Track upload status
       if (response.document_id) {
         setUploadStatus({
           document_id: response.document_id,
@@ -58,13 +60,17 @@ export default function Home() {
           processing_stage: 'uploading'
         });
 
+        // Poll for status updates
         pollUploadStatus(response.document_id);
 
+        // Switch to documents tab to show the uploaded document
         setActiveTab('documents');
 
+        // Show success toast
         setToast({ message: 'Document uploaded successfully!', type: 'success' });
       }
 
+      // Reload documents list
       await loadDocuments();
 
       return response;
@@ -119,6 +125,11 @@ export default function Home() {
     setChatMessages(prev => [...prev, assistantMessage]);
   };
 
+  const handleDeleteDocument = async (documentId: string) => {
+    await api.deleteDocument(documentId);
+    await loadDocuments();
+  };
+
   const handleChatReset = () => {
     setChatMessages([]);
   };
@@ -160,6 +171,7 @@ export default function Home() {
               documents={documents}
               loading={loading}
               onRefresh={loadDocuments}
+              onDelete={handleDeleteDocument}
             />
           </div>
         );

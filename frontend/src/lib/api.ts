@@ -75,6 +75,10 @@ export const api = {
       embeddings_generated?: number;
     }>(`/api/status/${documentId}`),
 
+  // Delete document endpoint
+  deleteDocument: (documentId: string) =>
+    fetchApi<{ deleted: string }>(`/api/documents/${documentId}`, { method: 'DELETE' }),
+
   // System stats endpoint
   getStats: () => fetchApi<{
     documents_processed: number;

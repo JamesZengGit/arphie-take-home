@@ -120,3 +120,25 @@ Stack: Next.js 14 + Tailwind CSS. No external component library — custom `Head
 **CORS headers missing on error responses** — FastAPI's built-in exception handler doesn't apply CORS middleware to 500 responses. Browser DevTools showed a CORS error masking the real server error. Fixed with a global `@app.exception_handler(Exception)` that applies CORS headers before re-raising.
 
 **Hidden file input in upload zone** — the drag-and-drop zone had a hidden `<input type="file">` and "or click to select" text. Removed — upload is drag-and-drop only, which is the intended interaction.
+
+## Document Delete
+
+`DELETE /api/documents/{document_id}` removes the document and all its chunks from PostgreSQL. Frontend shows a spinner on the row while the request is in-flight, then refreshes the list on success.
+
+## Evaluation
+
+We use [RAGAs](https://github.com/explodinggradients/ragas) to measure system reliability. Run it yourself:
+
+```bash
+python evaluate_system.py --n 10 --save
+```
+
+Uses the `ragas-wikiqa` HuggingFace benchmark — pre-written human questions with ground-truth answers — rather than synthetic questions generated from uploaded documents (which would only test whether the system can parrot back its own training data).
+
+Latest results (ragas-wikiqa, n=10):
+
+| Metric | Score |
+|--------|-------|
+| Faithfulness | 0.984 |
+| Context Precision | 1.000 |
+| Context Recall | 0.800 |

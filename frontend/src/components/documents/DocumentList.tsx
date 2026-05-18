@@ -1,17 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { File, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { File, Clock, CheckCircle, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { Document } from '@/types';
 
 interface DocumentListProps {
   documents: Document[];
   loading: boolean;
   onRefresh: () => void;
+  onDelete: (documentId: string) => Promise<void>;
 }
 
-export function DocumentList({ documents, loading, onRefresh }: DocumentListProps) {
+export function DocumentList({ documents, loading, onRefresh, onDelete }: DocumentListProps) {
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'status'>('date');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (documentId: string) => {
+    setDeletingId(documentId);
+    await onDelete(documentId);
+    setDeletingId(null);
+  };
 
   const sortedDocuments = [...documents].sort((a, b) => {
     switch (sortBy) {
@@ -52,6 +60,14 @@ export function DocumentList({ documents, loading, onRefresh }: DocumentListProp
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const formatDate = (dateString: string) => {
@@ -138,6 +154,9 @@ export function DocumentList({ documents, loading, onRefresh }: DocumentListProp
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Uploaded
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -190,6 +209,20 @@ export function DocumentList({ documents, loading, onRefresh }: DocumentListProp
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
                         {formatDate(doc.upload_timestamp)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleDelete(doc.document_id)}
+                          disabled={deletingId === doc.document_id}
+                          className="text-red-600 hover:text-red-800 disabled:opacity-40 transition-colors"
+                          title="Delete document"
+                        >
+                          {deletingId === doc.document_id
+                            ? <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            : <Trash2 className="w-4 h-4" />}
+                        </button>
                       </div>
                     </td>
                   </tr>
